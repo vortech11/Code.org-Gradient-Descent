@@ -1,11 +1,11 @@
-setActiveCanvas("canvas1");
+createCanvas("canvas1", 320, 450);
 setStrokeWidth(0.001);
 
 var objects = [];
-var objectNum = 1000;
+var objectNum = 100;
 var genNumber = 100;
 var cutoff = 0.99;
-var s = 0.3;
+var s = 0.5;
 var decay = 0.9;
 
 var realR = 255;
