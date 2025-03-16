@@ -1,0 +1,143 @@
+setActiveCanvas("canvas1");
+setStrokeWidth(0.001);
+
+var objects = [];
+var objectNum = 1000;
+var genNumber = 100;
+var cutoff = 0.99;
+var s = 0.3;
+var decay = 0.9;
+
+var realR = 255;
+var realG = 0;
+var realB = 0;
+
+var fitnesses = [];
+var fitnessNames = [];
+
+var deleted;
+var replicated;
+
+objectNum = 2 * Math.round(objectNum / 2);
+
+function box(iR, iG, iB, s){
+  objects.push(this);
+  
+  this.r = (getRandomNumber() * 2.55 * s + iR).clamp(0, 255);
+  this.g = (getRandomNumber() * 2.55 * s + iG).clamp(0, 255);
+  this.b = (getRandomNumber() * 2.55 * s + iB).clamp(0, 255);
+  this.size = 100;
+  
+  this.x = Math.random() * (320 - this.size);
+  this.y = Math.random() * (450 - this.size);
+  
+  this.print = function(){
+    setFillColor(rgb(this.r, this.g, this.b));
+    rect(this.x, this.y, this.size, this.size);
+  };
+  
+  this.addFitness = function(){
+    var fitness = this.r*realR+this.g*realG+this.b*realB;
+    fitnesses.push(fitness);
+    fitnessNames.push(this);
+  };
+  
+  this.replicate = function(){
+    var box2 = new box(this.r, this.g, this.b, s);
+  };
+}
+
+function printObjects(){
+  clearCanvas();
+  var n = objects.length;
+  for(var i = 0; i < n; i++){
+    objects[i].print();
+  }
+}
+
+function generateObjects(){
+  var box1;
+  objects = [];
+  for(var i = 0; i < objectNum; i++){
+    box1 = new box(127.5, 127.5, 127.5, s);
+  }
+}
+
+function scoreObjects(){
+  fitnesses = [];
+  fitnessNames = [];
+  var n = objects.length;
+  for(var i = 0; i < n; i++){
+    objects[i].addFitness();
+  }
+  quickSort(fitnesses, 0, fitnesses.length-1);
+}
+
+function cullObjects(){
+  deleted = (objects.length-1) * cutoff;
+  fitnesses.splice(0, deleted);
+  fitnessNames.splice(0, deleted);
+  objects = fitnessNames;
+}
+
+function replicateObjects(){
+  var n = objects.length;
+  var n2 = objectNum/n;
+  for(var i = 0; i < n; i++){
+    for(var j = 0; j < n2; j++){
+      objects[i].replicate();
+    }
+  }
+}
+
+function partition(arr, low, high){
+    var pivot = arr[high];
+    var i = low - 1;
+    for (var j = low; j <= high - 1; j++) {
+        if (arr[j] < pivot) {
+            i++;
+            
+            swap(arr, i, j);
+            swap(fitnessNames, i, j);
+        }
+    }
+    swap(arr, i + 1, high);
+    swap(fitnessNames, i + 1, high);
+    return i + 1;
+}
+
+function swap(arr, i, j){
+    var temp = arr[i];
+    arr[i] = arr[j];
+    arr[j] = temp;
+}
+
+function quickSort(arr, low, high){
+    if (low < high) {
+        var pi = partition(arr, low, high);
+        quickSort(arr, low, pi - 1);
+        quickSort(arr, pi + 1, high);
+    }
+}
+
+Number.prototype.clamp = function(min, max) {
+  return Math.min(Math.max(this, min), max);
+};
+
+function getRandomNumber(){
+    return Math.floor(Math.random()*199) - 99;
+}
+
+generateObjects();
+printObjects();
+
+for(var i = 0; i < genNumber; i++){
+  scoreObjects();
+
+  cullObjects();
+  replicateObjects();
+  
+  printObjects();
+  console.log(s);
+  s *= decay;
+}
